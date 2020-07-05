@@ -33,7 +33,7 @@ data = pd.DataFrame([
 ['N/A',0,0,0],
 ['N/A',0,0,0],
 ['N/A',0,0,0],
-], columns = ['Nombre', 'Cantidad', 'Precio', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
+], columns = ['Nombre', 'Precio', 'Cantidad', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
 
 
 def is_number(s):
@@ -75,42 +75,18 @@ class TableWidget(QTableWidget):
                     x = str(self.df.iloc[i, j])
                     self.LineWidget = QLineEdit()
                     self.LineWidget.setPlaceholderText(x)
-
-                    #tableWidget_F = QTableWidgetItem()
-                    #self.LineWidget.textChanged.connect(self.pruebF)
-
-
                     self.setCellWidget(i, j, self.LineWidget)
-                    self.cellActivated.connect(self.productNameSet)
-                    #self.cellWidget(i,j).textChanged.connect(self.pruebF)
-                    #self.item(i, j).textChanged.connect(self.pruebF)
-
+                elif j==2:
+                    CantidadWidget= QComboBox()
+                    CantidadWidget.addItems(["0", "1", "2","3","4","5"])
+                    self.setCellWidget(i, j, CantidadWidget)
                 elif j==3:
-                    x= QDate.currentDate()
-                    DateEditWidget= QDateEdit()
-                    fecha = QTableWidgetItem(x.toString())
+                    DateEditWidget= QDateTimeEdit()
                     self.setCellWidget(i, j, DateEditWidget)
-                    #self.setItem(i, j, fecha)
-                    self.cellChanged.connect(self.onCellChanged)
+
                 else:
                     x = float(self.df.iloc[i, j])
                     self.setItem(i, j, QTableWidgetItem(x))
-                    self.cellChanged.connect(self.onCellChanged)
-
-        #self.itemChange.connect(fecha,pruebaF)
-        #self.cellChanged.connect(self.onCellChanged)
-
-    @pyqtSlot(int, int)
-    def onCellChanged(self, row, column):
-        text = self.item(row, column).text()
-        if is_number(text):
-            number = float(text)
-        else:
-            number = text
-        self.df.iloc[row, column]= str(number)
-
-    def productNameSet(self,row, column):
-        self.df.iloc[self.currentRow(), 0]= str(self.cellWidget(row,column).text())
 
 
 class App(QWidget):
@@ -130,12 +106,39 @@ class App(QWidget):
         self.layout.addWidget(self.tableWidget)
         self.button = QPushButton('Print DataFrame', self)
         self.layout.addWidget(self.button)
+        self.boton = QPushButton('Apply', self)
+        self.layout.addWidget(self.boton)
         self.setLayout(self.layout)
         self.button.clicked.connect(self.print_my_df)
+        self.boton.clicked.connect(self.ApplyAction)
 
     @pyqtSlot()
     def print_my_df(self):
         print(self.tableWidget.df)
+    def ApplyAction(self):
+        print(self.tableWidget.rowCount())
+        for i in range(self.tableWidget.rowCount()):
+            for j in range(self.tableWidget.columnCount()):
+                #self.tableWidget.setCurrentCell(i,j)
+                if j==0:
+                    nombre=str(self.tableWidget.cellWidget(i,j).text())
+                    self.tableWidget.df.iloc[i,j]=nombre
+                elif j==1:
+                    nombre=self.tableWidget.item(i, j).text()
+                    self.tableWidget.df.iloc[i,j]=nombre
+                elif j==2:
+                    nombre=str(self.tableWidget.cellWidget(i,j).currentText())
+                    self.tableWidget.df.iloc[i,j]=nombre
+                else:
+
+
+                    nombre=str(self.tableWidget.cellWidget(i,j).sectionText(self.tableWidget.cellWidget(i,j).MonthSection))+'/'+str(self.tableWidget.cellWidget(i,j).sectionText(self.tableWidget.cellWidget(i,j).YearSection))
+                    self.tableWidget.df.iloc[i,j]=nombre
+                    #print('fecha')
+
+ #       self.tableWidget.setCurrentCell(1,1)
+
+  #      print(self.tableWidget.currentRow())
 
 
 if __name__ == '__main__':

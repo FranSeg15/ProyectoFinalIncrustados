@@ -47,7 +47,7 @@ data = pd.DataFrame([
 ['N/A',0,0,0],
 ['N/A',0,0,0],
 ['N/A',0,0,0],
-], columns = ['Nombre', 'Cantidad', 'Precio', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
+], columns = ['Nombre', 'Precio', 'Cantidad', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
 
 
 
@@ -87,50 +87,24 @@ class TableWidget(QTableWidget):
         for i in range(self.rowCount()):
             header_item = QtWidgets.QTableWidgetItem(str(self.df.index[i]))#str(self.df.index[0])
             self.setVerticalHeaderItem(i,header_item)
-
         for i in range(self.rowCount()):
             for j in range(self.columnCount()):
                 if j==0:
                     x = str(self.df.iloc[i, j])
                     self.LineWidget = QLineEdit()
                     self.LineWidget.setPlaceholderText(x)
-
-                    #tableWidget_F = QTableWidgetItem()
-                    #self.LineWidget.textChanged.connect(self.pruebF)
-
-
                     self.setCellWidget(i, j, self.LineWidget)
-                    self.cellActivated.connect(self.productNameSet)
-                    #self.cellWidget(i,j).textChanged.connect(self.pruebF)
-                    #self.item(i, j).textChanged.connect(self.pruebF)
-
+                elif j==2:
+                    CantidadWidget= QComboBox()
+                    CantidadWidget.addItems(["0", "1", "2","3","4","5"])
+                    self.setCellWidget(i, j, CantidadWidget)
                 elif j==3:
-                    x= QDate.currentDate()
-                    DateEditWidget= QDateEdit()
-                    fecha = QTableWidgetItem(x.toString())
+                    DateEditWidget= QDateTimeEdit()
                     self.setCellWidget(i, j, DateEditWidget)
-                    #self.setItem(i, j, fecha)
-                    self.cellChanged.connect(self.onCellChanged)
+
                 else:
                     x = float(self.df.iloc[i, j])
                     self.setItem(i, j, QTableWidgetItem(x))
-                    self.cellChanged.connect(self.onCellChanged)
-
-        #self.itemChange.connect(fecha,pruebaF)
-        #self.cellChanged.connect(self.onCellChanged)
-
-    @pyqtSlot(int, int)
-    def onCellChanged(self, row, column):
-        text = self.item(row, column).text()
-        #print(text)
-        if is_number(text):
-            number = float(text)
-        else:
-            number = text
-        self.df.iloc[row, column]= str(number)
-
-    def productNameSet(self,row, column):
-        self.df.iloc[self.currentRow(), 0]= str(self.cellWidget(row,column).text())
 
 
 class Second(QMainWindow):
@@ -140,18 +114,20 @@ class Second(QMainWindow):
     def initUI(self):
         global data
         self.QWidget = QWidget()
-        df_rows = 10
-        df_cols = 3
         df = data
         self.QWidget.tableWidget = TableWidget(df, self)
-        self.setGeometry(700, 100, 350, 380)
+
 
         self.QWidget.layout = QVBoxLayout()
         self.QWidget.layout.addWidget(self.QWidget.tableWidget )
         self.QWidget.button = QPushButton('Print DataFrame', self)
         self.QWidget.layout.addWidget(self.QWidget.button)
         self.QWidget.setLayout(self.QWidget.layout)
+        self.QWidget.boton = QPushButton('Apply', self)
+        self.QWidget.layout.addWidget(self.QWidget.boton)
+        self.QWidget.setLayout(self.QWidget.layout)
         self.QWidget.button.clicked.connect(self.print_my_df)
+        self.QWidget.boton.clicked.connect(self.ApplyAction)
         self.setGeometry(600, 600, 900, 700)
         self.setWindowTitle('Administracion de producto')
         self.setCentralWidget(self.QWidget)
@@ -159,8 +135,21 @@ class Second(QMainWindow):
     @pyqtSlot()
     def print_my_df(self):
         print(self.QWidget.tableWidget.df)
-
-
+    def ApplyAction(self):
+        for i in range(self.QWidget.tableWidget.rowCount()):
+            for j in range(self.QWidget.tableWidget.columnCount()):
+                if j==0:
+                    nombre=str(self.QWidget.tableWidget.cellWidget(i,j).text())
+                    self.QWidget.tableWidget.df.iloc[i,j]=nombre
+                elif j==1:
+                    nombre=self.QWidget.tableWidget.item(i, j).text()
+                    self.QWidget.tableWidget.df.iloc[i,j]=nombre
+                elif j==2:
+                    nombre=str(self.QWidget.tableWidget.cellWidget(i,j).currentText())
+                    self.QWidget.tableWidget.df.iloc[i,j]=nombre
+                else:
+                    nombre=str(self.QWidget.tableWidget.cellWidget(i,j).sectionText(self.QWidget.tableWidget.cellWidget(i,j).MonthSection))+'/'+str(self.QWidget.tableWidget.cellWidget(i,j).sectionText(self.QWidget.tableWidget.cellWidget(i,j).YearSection))
+                    self.QWidget.tableWidget.df.iloc[i,j]=nombre
 
 class Vendedor(QMainWindow):
     int_Verify =0;
