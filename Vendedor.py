@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import pyqtSlot, Qt, QTimer
+from PyQt5.QtCore import pyqtSlot, Qt, QTimer,QDate, QTime, QDateTime
 from PyQt5.QtGui import *
 
 
