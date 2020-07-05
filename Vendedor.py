@@ -12,49 +12,99 @@ Website: zetcode.com
 
 import sys
 import pandas as pd
-
-#from PyQt5.QtWidgets import (QWidget, QTableWidget,QTableWidgetItem,QGridLayout,QPushButton, QApplication, QMainWindow, QMessageBox)
+import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import *
+from PyQt5.QtCore import pyqtSlot, Qt, QTimer
+from PyQt5.QtGui import *
+
 
 
 int_Verify =0;
 data = pd.DataFrame([
-[1, 9, 2],
-[1, 0, -1],
-[3, 5, 2],
-[3, 3, 2],
-[5, 8, 9],
-], columns = ['A', 'B', 'C'], index=['Row 1', 'Row 2', 'Row 3', 'Row 4', 'Row 5'])
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+['N/A',0,0,0],
+], columns = ['Nombre', 'Cantidad', 'Precio', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
 
-class TableModel(QtCore.QAbstractTableModel):
 
-    def __init__(self, data):
-        super(TableModel, self).__init__()
-        self._data = data
 
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            value = self._data.iloc[index.row(), index.column()]
-            return str(value)
 
-    def rowCount(self, index):
-        return self._data.shape[0]
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
-    def columnCount(self, index):
-        return self._data.shape[1]
 
-    def headerData(self, section, orientation, role):
-        # section is the index of the column/row.
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                return str(self._data.columns[section])
 
-            if orientation == Qt.Vertical:
-                return str(self._data.index[section])
 
+class FloatDelegate(QItemDelegate):
+    def __init__(self, parent=None):
+        QItemDelegate.__init__(self, parent=parent)
+
+    def createEditor(self, parent, option, index):
+        editor = QLineEdit(parent)
+        editor.setValidator(QDoubleValidator())
+        return editor
+
+
+class TableWidget(QTableWidget):
+    def __init__(self, df, parent=None):
+        QTableWidget.__init__(self, parent)
+        self.df = df
+        nRows = len(self.df.index)
+        nColumns = len(self.df.columns)
+        self.setRowCount(nRows)
+        self.setColumnCount(nColumns)
+        self.setItemDelegate(FloatDelegate())
+        for i in range(self.columnCount()):
+            header_item = QtWidgets.QTableWidgetItem(str(self.df.columns[i]))#str(self.df.index[0])
+            self.setHorizontalHeaderItem(i,header_item)
+        for i in range(self.rowCount()):
+            header_item = QtWidgets.QTableWidgetItem(str(self.df.index[i]))#str(self.df.index[0])
+            self.setVerticalHeaderItem(i,header_item)
+        for i in range(self.rowCount()):
+            for j in range(self.columnCount()):
+                x = str(self.df.iloc[i, j])
+                papa = QTableWidgetItem(str(x))
+                self.setItem(i, j,papa)
+
+        self.cellChanged.connect(self.onCellChanged)
+
+    @pyqtSlot(int,int)
+    def onCellChanged(self, row, column):
+        text = self.item(row, column).text()
+        print ('Row: ' , row ,'Column: ' , column,' ', text  )
+        if is_number(text):
+            number = float(text)
+        else:
+            number = 'assad'
+        self.df.iloc[row, column]= str(number)
+        print(self.df)
 
 
 class Second(QMainWindow):
@@ -62,57 +112,29 @@ class Second(QMainWindow):
         super(Second, self).__init__(parent)
         self.initUI()
     def initUI(self):
-        tabla = QWidget()
-        self.table = QTableView()
-        self.createTable()
+        global data
+        self.QWidget = QWidget()
+        df_rows = 10
+        df_cols = 3
+        df = data
+        self.QWidget.tableWidget = TableWidget(df, self)
+        self.setGeometry(700, 100, 350, 380)
 
-        # Add box layout, add table to box layout and add box layout to widget
-        box = QVBoxLayout()
-
-        #box.addWidget(self.tableWidget)
-       # tabla.setLayout(box)
-        #self.setLayout(self.layout)
-        #self.setCentralWidget(tabla)
-
-
-        self.setCentralWidget(self.table)
+        self.QWidget.layout = QVBoxLayout()
+        self.QWidget.layout.addWidget(self.QWidget.tableWidget )
+        self.QWidget.button = QPushButton('Print DataFrame', self)
+        self.QWidget.layout.addWidget(self.QWidget.button)
+        self.QWidget.setLayout(self.QWidget.layout)
+        self.QWidget.button.clicked.connect(self.print_my_df)
         self.setGeometry(600, 600, 900, 700)
-        #opciones.show()
-        self.setWindowTitle('Admin')
-        # Show widget
-        #self.show()
-
-    def createTable(self):
-       # Create table
-       global data
-       self.model = TableModel(data)
-       self.table.setModel(self.model)
-        #self.tableWidget = QTableWidget()
-        ##self.tableWidget.setRowCount(25)
-        #self.tableWidget.setColumnCount(4)
-        #self.tableWidget.setItem(0,0, QTableWidgetItem("A1"))
-        #self.tableWidget.setItem(1,0, QTableWidgetItem("A2"))
-        #self.tableWidget.setItem(2,0, QTableWidgetItem("A3"))
-        #self.tableWidget.setItem(3,0, QTableWidgetItem("A4"))
-        #self.tableWidget.setItem(4,0, QTableWidgetItem("A5"))
-        #self.tableWidget.setItem(5,0, QTableWidgetItem("Cell (3,2)"))
-        #self.tableWidget.setItem(6,0, QTableWidgetItem("Cell (4,1)"))
-        #self.tableWidget.setItem(7,0, QTableWidgetItem("Cell (4,2)"))
-        #self.tableWidget
-
-
-
-
-       #self.tableWidget.move(0,0)
-
-        # table selection change
-       #self.tableWidget.doubleClicked.connect(self.on_click)
+        self.setWindowTitle('Administracion de producto')
+        self.setCentralWidget(self.QWidget)
 
     @pyqtSlot()
-    def on_click(self):
-        print("\n")
-        for currentQTableWidgetItem in self.table.selectedItems():
-            print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
+    def print_my_df(self):
+        print(self.QWidget.tableWidget.df)
+
+
 
 class Vendedor(QMainWindow):
     int_Verify =0;
@@ -150,7 +172,7 @@ class Vendedor(QMainWindow):
         self.setCentralWidget(opciones)
         self.setGeometry(600, 600, 900, 700)
         #opciones.show()
-        self.setWindowTitle('Calculator')
+        self.setWindowTitle('Vendedor')
         self.show()
 
     def buttonClicked(self):
