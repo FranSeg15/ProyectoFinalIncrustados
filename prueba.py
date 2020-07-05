@@ -130,15 +130,8 @@ class App(QWidget):
                     nombre=str(self.tableWidget.cellWidget(i,j).currentText())
                     self.tableWidget.df.iloc[i,j]=nombre
                 else:
-
-
                     nombre=str(self.tableWidget.cellWidget(i,j).sectionText(self.tableWidget.cellWidget(i,j).MonthSection))+'/'+str(self.tableWidget.cellWidget(i,j).sectionText(self.tableWidget.cellWidget(i,j).YearSection))
                     self.tableWidget.df.iloc[i,j]=nombre
-                    #print('fecha')
-
- #       self.tableWidget.setCurrentCell(1,1)
-
-  #      print(self.tableWidget.currentRow())
 
 
 if __name__ == '__main__':

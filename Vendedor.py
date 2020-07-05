@@ -19,14 +19,16 @@ from PyQt5.QtCore import pyqtSlot, Qt, QTimer,QDate, QTime, QDateTime
 from PyQt5.QtGui import *
 
 
-
-int_Verify =0;
+debug=True
+int_Verify =0
+str_seleccion=''
+diferentes =[]
 data = pd.DataFrame([
+['Banano',1000,1,0],
 ['N/A',0,0,0],
 ['N/A',0,0,0],
 ['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
+['Banano',1000,2,0],
 ['N/A',0,0,0],
 ['N/A',0,0,0],
 ['N/A',0,0,0],
@@ -103,9 +105,94 @@ class TableWidget(QTableWidget):
                     self.setCellWidget(i, j, DateEditWidget)
 
                 else:
-                    x = float(self.df.iloc[i, j])
+                    if is_number( self.df.iloc[i,j]):
+                        x = float(self.df.iloc[i, j])
+                    else:
+                        x = str(self.df.iloc[i, j])
                     self.setItem(i, j, QTableWidgetItem(x))
 
+class TransaccionW(QMainWindow):
+    def __init__(self, parent=None):
+        super(TransaccionW, self).__init__(parent)
+        self.initUI()
+    def initUI(self):
+        global data
+        self.QWidget = QWidget()
+        self.df = data
+
+
+        self.QWidget.layout = QVBoxLayout()
+        if debug ==True:
+            self.QWidget.button = QPushButton('Print DataFrame', self)
+            self.QWidget.layout.addWidget(self.QWidget.button)
+            self.QWidget.setLayout(self.QWidget.layout)
+        self.EfectivoWidget = QLineEdit()
+        self.EfectivoWidget.setPlaceholderText('Ingrese el monto en efectivo')
+        self.QWidget.layout.addWidget(self.EfectivoWidget)
+        self.QWidget.setLayout(self.QWidget.layout)
+        self.QWidget.boton = QPushButton('Realizar pago', self)
+        self.QWidget.layout.addWidget(self.QWidget.boton)
+        self.QWidget.setLayout(self.QWidget.layout)
+        self.QWidget.button.clicked.connect(self.print_my_df)
+        self.QWidget.boton.clicked.connect(self.ApplyPayment)
+        self.setGeometry(600, 600, 900, 700)
+        self.setWindowTitle('Pago')
+        self.setCentralWidget(self.QWidget)
+
+    @pyqtSlot()
+    def print_my_df(self):
+        print(self.df)
+    def ApplyPayment(self):
+        global str_seleccion
+        self.EfectivoWidget.setPlaceholderText('Ingrese el monto en efectivo')
+
+        if is_number(self.EfectivoWidget.text()):
+            efectivo= float(self.EfectivoWidget.text())
+            #print(efectivo)
+            #print(str_seleccion)
+            self.pago(efectivo,str_seleccion)
+        else:
+            self.showdialog()
+    def pago(self,efectivo,seleccion):
+
+        datos_seleccion = seleccion.split('\n')
+        datos_seleccion[0]#Aqui esta el nombre
+        alcanza =True
+        disponible = False
+        for i in range(len(data.index)):
+            if self.df.iloc[i,0]==datos_seleccion[0]:
+                if float(self.df.iloc[i,2])>0.0:
+                    #alcanza
+                    disponible=True
+                    if (efectivo-float(self.df.iloc[i,1]))>0.0:
+                        alcanza=True
+                        vuelto=-efectivo-self.df.iloc[i,1]
+                        self.df.iloc[i,2]= float(self.df.iloc[i,2])-1.0
+                    else:
+                        alcanza=False
+                    break
+                else:
+                    disponible=False
+        if disponible==True:
+            if alcanza == True:
+
+
+    def showdialog(self,mensaje):
+       msg = QMessageBox()
+       msg.setIcon(QMessageBox.Information)
+
+       msg.setText(efectivo)
+       #msg.setInformativeText("This is additional information")
+       msg.setWindowTitle("Error de digitacion")
+       #msg.setDetailedText("The details are as follows:")
+       msg.setStandardButtons(QMessageBox.Ok)
+       #msg.buttonClicked.connect(self.msgbtn)
+
+       retval = msg.exec_()
+       #print ("value of pressed message box button:", retval)
+
+    #def msgbtn(self,i):
+      # print ("Button pressed is:",i.text())
 
 class Second(QMainWindow):
     def __init__(self, parent=None):
@@ -120,9 +207,10 @@ class Second(QMainWindow):
 
         self.QWidget.layout = QVBoxLayout()
         self.QWidget.layout.addWidget(self.QWidget.tableWidget )
-        self.QWidget.button = QPushButton('Print DataFrame', self)
-        self.QWidget.layout.addWidget(self.QWidget.button)
-        self.QWidget.setLayout(self.QWidget.layout)
+        if debug ==True:
+            self.QWidget.button = QPushButton('Print DataFrame', self)
+            self.QWidget.layout.addWidget(self.QWidget.button)
+            self.QWidget.setLayout(self.QWidget.layout)
         self.QWidget.boton = QPushButton('Apply', self)
         self.QWidget.layout.addWidget(self.QWidget.boton)
         self.QWidget.setLayout(self.QWidget.layout)
@@ -150,6 +238,7 @@ class Second(QMainWindow):
                 else:
                     nombre=str(self.QWidget.tableWidget.cellWidget(i,j).sectionText(self.QWidget.tableWidget.cellWidget(i,j).MonthSection))+'/'+str(self.QWidget.tableWidget.cellWidget(i,j).sectionText(self.QWidget.tableWidget.cellWidget(i,j).YearSection))
                     self.QWidget.tableWidget.df.iloc[i,j]=nombre
+        self.close()
 
 class Vendedor(QMainWindow):
     int_Verify =0;
@@ -160,30 +249,49 @@ class Vendedor(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        global data
+
         opciones = QWidget()
         grid = QGridLayout()
         opciones.setLayout(grid)
         #Aqui ocupo metodo para noombres
-        names = ['Cls', 'Bck', 'ppp', 'Close',
-                 '7', '8', '9', '/',
-                 '4', '5', '6', '*',
-                 '1', '2', '3', '-',
-                 '0', '.', '=', '+','-',
-                 '0', '.', '=', '+','','','','Pagar','Cancelar',]
+        Botones = ['A1', 'A2', 'A3', 'A4',
+                 'A5', 'B1', 'B2', 'B3',
+                 'B4', 'B5', 'C1', 'C2',
+                 'C3', 'C4', 'C5','D1', 'D2', 'D3',
+                 'D4', 'D5', 'E1', 'E2',
+                 'E3', 'E4', 'E5']
+        names = ['A1', 'A2', 'A3', 'A4',
+                  'A5', 'B1', 'B2', 'B3',
+                  'B4', 'B5', 'C1', 'C2',
+                  'C3', 'C4', 'C5','D1', 'D2', 'D3',
+                  'D4', 'D5', 'E1', 'E2',
+                  'E3', 'E4', 'E5','','','','Pagar','Cancelar',]
+        for i in range(25):
+            if data.iloc[i,0]!="":
+                names[i]=data.iloc[i,0]+'\n'+str(data.iloc[i,1])
+            else:
+                names[i]=''
         positions = [(i, j) for i in range(6) for j in range(5)]
-
+        diferentes=[]
+        diferentes.append(' ')
         for position, name in zip(positions, names):
-
+            repetido=False
+            for i in range(len(diferentes)):
+                   if diferentes[i]==name:
+                       repetido=True
             if name == '':
                 continue
-            button = QPushButton(name)
-            button.clicked.connect(self.buttonClicked)
-            grid.addWidget(button, *position)
-
-        #opciones.move(300, 150)
-
+            elif repetido==True:
+                continue
+            else:
+                button = QPushButton(name)
+                button.clicked.connect(self.buttonClicked)
+                grid.addWidget(button, *position)
+                diferentes.append(name)
         self.statusBar()
         self.dialog= Second(self)
+        self.dialogTransaccion= TransaccionW(self)
         self.setCentralWidget(opciones)
         self.setGeometry(600, 600, 900, 700)
         #opciones.show()
@@ -200,14 +308,14 @@ class Vendedor(QMainWindow):
         elif sender.text() == "Cancelar":
             str_seleccion=''
             int_Verify=int_Verify+1
+            self.initUI()
         elif sender.text() == "Pagar":
             if str_seleccion!='':
                self.transaccion(str_seleccion)
-
-
         else:
             str_seleccion=sender.text()
             int_Verify=0
+
         if int_Verify==5:
             self.admin_log()
             int_Verify=0
@@ -217,7 +325,8 @@ class Vendedor(QMainWindow):
         self.dialog.show()
 
     def transaccion(self,str_producto):
-        print('aa '+str_producto )
+        self.dialogTransaccion.show()
+
 
 def main():
     global int_Verify
