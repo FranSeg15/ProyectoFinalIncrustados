@@ -63,7 +63,12 @@ class TableWidget(QTableWidget):
         self.setRowCount(nRows)
         self.setColumnCount(nColumns)
         self.setItemDelegate(FloatDelegate())
-
+        for i in range(self.columnCount()):
+            header_item = QtWidgets.QTableWidgetItem(str(self.df.columns[i]))#str(self.df.index[0])
+            self.setHorizontalHeaderItem(i,header_item)
+        for i in range(self.rowCount()):
+            header_item = QtWidgets.QTableWidgetItem(str(self.df.index[i]))#str(self.df.index[0])
+            self.setVerticalHeaderItem(i,header_item)
         for i in range(self.rowCount()):
             for j in range(self.columnCount()):
                 if j==0:
@@ -76,7 +81,7 @@ class TableWidget(QTableWidget):
 
 
                     self.setCellWidget(i, j, self.LineWidget)
-                    self.cellActivated.connect(self.pruebaF)
+                    self.cellActivated.connect(self.productNameSet)
                     #self.cellWidget(i,j).textChanged.connect(self.pruebF)
                     #self.item(i, j).textChanged.connect(self.pruebF)
 
@@ -90,29 +95,23 @@ class TableWidget(QTableWidget):
                 else:
                     x = float(self.df.iloc[i, j])
                     self.setItem(i, j, QTableWidgetItem(x))
-                    self.cellActivated.connect(self.pruebaF)
-                   # self.cellChanged.connect(self.onCellChanged)
+                    self.cellChanged.connect(self.onCellChanged)
 
         #self.itemChange.connect(fecha,pruebaF)
         #self.cellChanged.connect(self.onCellChanged)
 
     @pyqtSlot(int, int)
     def onCellChanged(self, row, column):
-        #self.LineWidget.textChanged.connect(self.pruebF)
         text = self.item(row, column).text()
-        #print(text)
         if is_number(text):
             number = float(text)
         else:
             number = text
         self.df.iloc[row, column]= str(number)
 
-    def pruebaF(self,row, column):
-        #print(str(self.cellWidget(row,column).text()))
-        #print (self.currentRow())
-
+    def productNameSet(self,row, column):
         self.df.iloc[self.currentRow(), 0]= str(self.cellWidget(row,column).text())
-        #print(" ", s)
+
 
 class App(QWidget):
     def __init__(self):
