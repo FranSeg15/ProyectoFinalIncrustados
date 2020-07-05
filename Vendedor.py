@@ -63,7 +63,7 @@ class Second(QMainWindow):
         self.initUI()
     def initUI(self):
         tabla = QWidget()
-        self.table = self.tableWidget()
+        self.table = QTableView()
         self.createTable()
 
         # Add box layout, add table to box layout and add box layout to widget
@@ -85,8 +85,6 @@ class Second(QMainWindow):
     def createTable(self):
        # Create table
        global data
-       self.model = TableModel(data)
-       self.table.setModel(self.model)
        self.model = TableModel(data)
        self.table.setModel(self.model)
         #self.tableWidget = QTableWidget()
@@ -113,7 +111,7 @@ class Second(QMainWindow):
     @pyqtSlot()
     def on_click(self):
         print("\n")
-        for currentQTableWidgetItem in self.tableWidget.selectedItems():
+        for currentQTableWidgetItem in self.table.selectedItems():
             print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
 
 class Vendedor(QMainWindow):
