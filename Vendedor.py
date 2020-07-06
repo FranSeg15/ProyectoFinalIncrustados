@@ -122,16 +122,17 @@ class TransaccionW(QMainWindow):
 
 
         self.QWidget.layout = QVBoxLayout()
-        if debug ==True:
-            self.QWidget.button = QPushButton('Print DataFrame', self)
-            self.QWidget.layout.addWidget(self.QWidget.button)
-            self.QWidget.setLayout(self.QWidget.layout)
+
+        self.QWidget.button = QPushButton('Cancelar', self)
+
+        self.QWidget.setLayout(self.QWidget.layout)
         self.EfectivoWidget = QLineEdit()
         self.EfectivoWidget.setPlaceholderText('Ingrese el monto en efectivo')
         self.QWidget.layout.addWidget(self.EfectivoWidget)
         self.QWidget.setLayout(self.QWidget.layout)
         self.QWidget.boton = QPushButton('Realizar pago', self)
         self.QWidget.layout.addWidget(self.QWidget.boton)
+        self.QWidget.layout.addWidget(self.QWidget.button)
         self.QWidget.setLayout(self.QWidget.layout)
         self.QWidget.button.clicked.connect(self.print_my_df)
         self.QWidget.boton.clicked.connect(self.ApplyPayment)
@@ -141,7 +142,7 @@ class TransaccionW(QMainWindow):
 
     @pyqtSlot()
     def print_my_df(self):
-        print(self.df)
+        self.close()
     def ApplyPayment(self):
         global str_seleccion
         self.EfectivoWidget.setPlaceholderText('Ingrese el monto en efectivo')
@@ -156,11 +157,16 @@ class TransaccionW(QMainWindow):
             mensaje= 'Por favor ingrese un monto valido'
             self.showdialog(mensaje)
     def pago(self,efectivo,seleccion):
-
         datos_seleccion = seleccion.split('\n')
         datos_seleccion[0]#Aqui esta el nombre
+        type= 'Sale Update:'
+        current_status= 'Venta iniciada, producto: '+ str(datos_seleccion[0])
+        msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=current_status)
+        sendMessage(msg_txt_formatted)
+
         alcanza =True
         disponible = False
+        cantidad_restante=0.0
         for i in range(len(data.index)):
             if self.df.iloc[i,0]==datos_seleccion[0]:
                 if float(self.df.iloc[i,2])>0.0:
@@ -168,8 +174,9 @@ class TransaccionW(QMainWindow):
                     disponible=True
                     if (efectivo-float(self.df.iloc[i,1]))>=0.0:
                         alcanza=True
-                        vuelto= efectivo-self.df.iloc[i,1]
+                        vuelto= efectivo-float(self.df.iloc[i,1])
                         self.df.iloc[i,2]= float(self.df.iloc[i,2])-1.0
+                        #cantidad_restante=self.df.iloc[i,2]
                     else:
                         alcanza=False
                     break
@@ -177,7 +184,11 @@ class TransaccionW(QMainWindow):
                     disponible=False
         if disponible==True:
             if alcanza == True:
-                mensaje= 'Muchas gracias por su compra, su vuelto es: '+str(int(vuelto))
+                type= 'Sale Update:'
+                current_status= 'Producto: '+str(datos_seleccion[0])
+                msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=current_status)
+                sendMessage(msg_txt_formatted)
+                mensaje= 'Muchas gracias por su compra, su vuelto es: '+ str(vuelto)
                 self.showdialog(mensaje)
                 self.close()
             else:
@@ -185,7 +196,12 @@ class TransaccionW(QMainWindow):
                 self.showdialog(mensaje)
         else:
             mensaje= 'El producto no esta disponible.'
+            type= 'Admin Update:'
+            current_status= 'Producto '+str(datos_seleccion[0])+' no disponible '
+            msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=current_status)
+            sendMessage(msg_txt_formatted)
             self.showdialog(mensaje)
+
             self.close()
 
     def showdialog(self,mensaje):
@@ -249,6 +265,11 @@ class Second(QMainWindow):
                 else:
                     nombre=str(self.QWidget.tableWidget.cellWidget(i,j).sectionText(self.QWidget.tableWidget.cellWidget(i,j).MonthSection))+'/'+str(self.QWidget.tableWidget.cellWidget(i,j).sectionText(self.QWidget.tableWidget.cellWidget(i,j).YearSection))
                     self.QWidget.tableWidget.df.iloc[i,j]=nombre
+        type= 'Status Update:'
+        current_status= 'Actualizacion de inventario'
+        msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=current_status)
+        print('5s')
+        sendMessage(msg_txt_formatted)
         self.close()
 
 class Vendedor(QMainWindow):
@@ -358,6 +379,10 @@ class Vendedor(QMainWindow):
             int_Verify=0
 
         if int_Verify==5:
+            type= 'Admin Login:'
+            current_status= 'Iniciada administracion del producto'
+            msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=current_status)
+            sendMessage(msg_txt_formatted)
             self.admin_log()
             int_Verify=0
         self.statusBar().showMessage(sender.text() + ' was pressed')
