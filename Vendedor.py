@@ -1,14 +1,3 @@
-#!/usr/bin/python
-
-"""
-ZetCode PyQt5 tutorial
-
-In this example, we create a skeleton
-of a calculator using QGridLayout.
-
-Author: Jan Bodnar
-Website: zetcode.com
-"""
 
 import sys
 import pandas as pd
@@ -150,9 +139,11 @@ class TransaccionW(QMainWindow):
             efectivo= float(self.EfectivoWidget.text())
             #print(efectivo)
             #print(str_seleccion)
+
             self.pago(efectivo,str_seleccion)
         else:
-            self.showdialog()
+            mensaje= 'Por favor ingrese un monto valido'
+            self.showdialog(mensaje)
     def pago(self,efectivo,seleccion):
 
         datos_seleccion = seleccion.split('\n')
@@ -164,9 +155,9 @@ class TransaccionW(QMainWindow):
                 if float(self.df.iloc[i,2])>0.0:
                     #alcanza
                     disponible=True
-                    if (efectivo-float(self.df.iloc[i,1]))>0.0:
+                    if (efectivo-float(self.df.iloc[i,1]))>=0.0:
                         alcanza=True
-                        vuelto=-efectivo-self.df.iloc[i,1]
+                        vuelto= efectivo-self.df.iloc[i,1]
                         self.df.iloc[i,2]= float(self.df.iloc[i,2])-1.0
                     else:
                         alcanza=False
@@ -175,13 +166,22 @@ class TransaccionW(QMainWindow):
                     disponible=False
         if disponible==True:
             if alcanza == True:
-
+                mensaje= 'Muchas gracias por su compra, su vuelto es: '+str(int(vuelto))
+                self.showdialog(mensaje)
+                self.close()
+            else:
+                mensaje= 'Dinero insuficiente.'
+                self.showdialog(mensaje)
+        else:
+            mensaje= 'El producto no esta disponible.'
+            self.showdialog(mensaje)
+            self.close()
 
     def showdialog(self,mensaje):
        msg = QMessageBox()
-       msg.setIcon(QMessageBox.Information)
+       #msg.setIcon(QMessageBox.Information)
 
-       msg.setText(efectivo)
+       msg.setText(mensaje)
        #msg.setInformativeText("This is additional information")
        msg.setWindowTitle("Error de digitacion")
        #msg.setDetailedText("The details are as follows:")
@@ -189,6 +189,7 @@ class TransaccionW(QMainWindow):
        #msg.buttonClicked.connect(self.msgbtn)
 
        retval = msg.exec_()
+
        #print ("value of pressed message box button:", retval)
 
     #def msgbtn(self,i):
