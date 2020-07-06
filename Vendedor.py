@@ -10,16 +10,22 @@ from PyQt5.QtCore import pyqtSlot, Qt, QTimer,QDate, QTime, QDateTime
 from PyQt5.QtGui import *
 
 
-debug=True
-int_Verify =0
+debug=False
 str_seleccion=''
 diferentes =[]
+
+CONNECTION_STRING = "HostName=Proyecto-IE-Incrustados.azure-devices.net;DeviceId=MyPythonDevice;SharedAccessKey=SYD4n2ovYxHGgexe18gCE+wdfSN4SjMwzg/zDdAUmOw="
+
+# Define the JSON message to send to IoT Hub.
+
+MSG_TXT = '{{"Message Type": {msg_type},"Content": {data_str}}}'
+
 data = pd.DataFrame([
-['Banano',1000,1,0],
+['Galleta chicky',200,1.0,0],
+['Merendina',150,3.0,0],
 ['',0,0,0],
 ['',0,0,0],
-['',0,0,0],
-['Banano',1000,2,0],
+['Galleta chicky',200,2.0,0],
 ['',0,0,0],
 ['',0,0,0],
 ['',0,0,0],
@@ -41,15 +47,6 @@ data = pd.DataFrame([
 ['',0,0,0],
 ['',0,0,0],
 ], columns = ['Nombre', 'Precio', 'Cantidad', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
-
-CONNECTION_STRING = "HostName=Proyecto-IE-Incrustados.azure-devices.net;DeviceId=MyPythonDevice;SharedAccessKey=SYD4n2ovYxHGgexe18gCE+wdfSN4SjMwzg/zDdAUmOw="
-
-# Define the JSON message to send to IoT Hub.
-oldTime =time.time()
-TEMPERATURE = 20.0
-HUMIDITY = 60
-MSG_TXT = '{{"Message Type": {msg_type},"Content": {data_str}}}'
-first_connection =True
 
 def is_number(s):
     try:
@@ -122,10 +119,14 @@ class TransaccionW(QMainWindow):
 
 
         self.QWidget.layout = QVBoxLayout()
-
-        self.QWidget.button = QPushButton('Cancelar', self)
-
+        self.QWidget.labelName = QLabel()
+        self.QWidget.labelMonto = QLabel()#AlignHCenter
+        self.QWidget.labelName.setAlignment(Qt.AlignCenter)
+        self.QWidget.labelMonto.setAlignment(Qt.AlignCenter)
+        self.QWidget.layout.addWidget(self.QWidget.labelName)
+        self.QWidget.layout.addWidget(self.QWidget.labelMonto)
         self.QWidget.setLayout(self.QWidget.layout)
+        self.QWidget.button = QPushButton('Cancelar', self)
         self.EfectivoWidget = QLineEdit()
         self.EfectivoWidget.setPlaceholderText('Ingrese el monto en efectivo')
         self.QWidget.layout.addWidget(self.EfectivoWidget)
@@ -206,20 +207,10 @@ class TransaccionW(QMainWindow):
 
     def showdialog(self,mensaje):
        msg = QMessageBox()
-       #msg.setIcon(QMessageBox.Information)
        msg.setText(mensaje)
-       #msg.setInformativeText("This is additional information")
-       msg.setWindowTitle("Error de digitacion")
-       #msg.setDetailedText("The details are as follows:")
+       msg.setWindowTitle("Mensaje")
        msg.setStandardButtons(QMessageBox.Ok)
-       #msg.buttonClicked.connect(self.msgbtn)
-
        retval = msg.exec_()
-
-       #print ("value of pressed message box button:", retval)
-
-    #def msgbtn(self,i):
-      # print ("Button pressed is:",i.text())
 
 class Second(QMainWindow):
     def __init__(self, parent=None):
@@ -238,10 +229,10 @@ class Second(QMainWindow):
             self.QWidget.button = QPushButton('Print DataFrame', self)
             self.QWidget.layout.addWidget(self.QWidget.button)
             self.QWidget.setLayout(self.QWidget.layout)
+            self.QWidget.button.clicked.connect(self.print_my_df)
         self.QWidget.boton = QPushButton('Apply', self)
         self.QWidget.layout.addWidget(self.QWidget.boton)
         self.QWidget.setLayout(self.QWidget.layout)
-        self.QWidget.button.clicked.connect(self.print_my_df)
         self.QWidget.boton.clicked.connect(self.ApplyAction)
         self.setGeometry(600, 600, 900, 700)
         self.setWindowTitle('Administracion de producto')
@@ -268,7 +259,7 @@ class Second(QMainWindow):
         type= 'Status Update:'
         current_status= 'Actualizacion de inventario'
         msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=current_status)
-        print('5s')
+        #print('5s')
         sendMessage(msg_txt_formatted)
         self.close()
 
@@ -282,7 +273,7 @@ class Vendedor(QMainWindow):
     def initUI(self):
         global data
         self.timer =QTimer()
-        self.timer.start(5000)
+        self.timer.start(60000)
         self.timer.timeout.connect(self.status)
         opciones = QWidget()
         grid = QGridLayout()
@@ -351,15 +342,13 @@ class Vendedor(QMainWindow):
                     data_list.append(float(data.iloc[i,2]))
                     data_list.append(data.iloc[i,3])
 
-        print(data_list)
+        #print(data_list)
 
 
         type= 'Status Update:'
-        current_status= 'hola'
         msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=data_list)
-        print('5s')
+        #print('5s')
         sendMessage(msg_txt_formatted)
-        #self.timer.start(1000)
     def buttonClicked(self):
         global int_Verify
         global str_seleccion
@@ -377,6 +366,7 @@ class Vendedor(QMainWindow):
         else:
             str_seleccion=sender.text()
             int_Verify=0
+            self.statusBar().showMessage('Ha seleccionado: '+sender.text())
 
         if int_Verify==5:
             type= 'Admin Login:'
@@ -385,12 +375,16 @@ class Vendedor(QMainWindow):
             sendMessage(msg_txt_formatted)
             self.admin_log()
             int_Verify=0
-        self.statusBar().showMessage(sender.text() + ' was pressed')
+
     def admin_log(self):
         print('admin')
         self.dialog.show()
 
     def transaccion(self,str_producto):
+        datos_producto =str_producto.split('\n')
+        self.dialogTransaccion.QWidget.labelName.setText('Ud ha seleccionado: '+ datos_producto[0])
+        self.dialogTransaccion.QWidget.labelMonto.setText('El precio es: '+ datos_producto[1])
+        self.dialogTransaccion.EfectivoWidget.clear()
         self.dialogTransaccion.show()
 def sendMessage(msg_txt_formatted):
     try:
