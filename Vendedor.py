@@ -1,4 +1,6 @@
-
+import random
+import time
+from azure.iot.device import IoTHubDeviceClient, Message
 import sys
 import pandas as pd
 import numpy as np
@@ -14,34 +16,40 @@ str_seleccion=''
 diferentes =[]
 data = pd.DataFrame([
 ['Banano',1000,1,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
 ['Banano',1000,2,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
-['N/A',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
+['',0,0,0],
 ], columns = ['Nombre', 'Precio', 'Cantidad', 'Fecha de vencimiento'], index=['A1', 'A2', 'A3', 'A4', 'A5','B1', 'B2', 'B3', 'B4', 'B5','C1', 'C2', 'C3', 'C4', 'C5','D1', 'D2', 'D3', 'D4', 'D5','E1', 'E2', 'E3', 'E4', 'E5'])
 
+CONNECTION_STRING = "HostName=Proyecto-IE-Incrustados.azure-devices.net;DeviceId=MyPythonDevice;SharedAccessKey=SYD4n2ovYxHGgexe18gCE+wdfSN4SjMwzg/zDdAUmOw="
 
-
+# Define the JSON message to send to IoT Hub.
+oldTime =time.time()
+TEMPERATURE = 20.0
+HUMIDITY = 60
+MSG_TXT = '{{"Message Type": {msg_type},"Content": {data_str}}}'
+first_connection =True
 
 def is_number(s):
     try:
@@ -49,6 +57,9 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+
+
 
 
 
@@ -83,7 +94,7 @@ class TableWidget(QTableWidget):
                 if j==0:
                     x = str(self.df.iloc[i, j])
                     self.LineWidget = QLineEdit()
-                    self.LineWidget.setPlaceholderText(x)
+                    self.LineWidget.insert(x)
                     self.setCellWidget(i, j, self.LineWidget)
                 elif j==2:
                     CantidadWidget= QComboBox()
@@ -180,7 +191,6 @@ class TransaccionW(QMainWindow):
     def showdialog(self,mensaje):
        msg = QMessageBox()
        #msg.setIcon(QMessageBox.Information)
-
        msg.setText(mensaje)
        #msg.setInformativeText("This is additional information")
        msg.setWindowTitle("Error de digitacion")
@@ -242,7 +252,6 @@ class Second(QMainWindow):
         self.close()
 
 class Vendedor(QMainWindow):
-    int_Verify =0;
 
     def __init__(self):
         super().__init__()
@@ -251,7 +260,9 @@ class Vendedor(QMainWindow):
 
     def initUI(self):
         global data
-
+        self.timer =QTimer()
+        self.timer.start(5000)
+        self.timer.timeout.connect(self.status)
         opciones = QWidget()
         grid = QGridLayout()
         opciones.setLayout(grid)
@@ -299,6 +310,35 @@ class Vendedor(QMainWindow):
         self.setWindowTitle('Vendedor')
         self.show()
 
+
+    def status(self):
+        global MSG_TXT
+        global data
+        data_list = []
+        for i in range(len(data.index)):
+            if data.iloc[i,0]=='':
+                continue
+            else:
+                si_esta=False
+                for k in range(len(data_list)):
+                    if data.iloc[i,0]==data_list[k]:
+                        data_list[k+1]=float(data_list[k+1])+float(data.iloc[i,2])
+                        si_esta = True
+                        break
+                if si_esta==False:
+                    data_list.append(data.iloc[i,0])
+                    data_list.append(float(data.iloc[i,2]))
+                    data_list.append(data.iloc[i,3])
+
+        print(data_list)
+
+
+        type= 'Status Update:'
+        current_status= 'hola'
+        msg_txt_formatted = MSG_TXT.format(msg_type=type, data_str=data_list)
+        print('5s')
+        sendMessage(msg_txt_formatted)
+        #self.timer.start(1000)
     def buttonClicked(self):
         global int_Verify
         global str_seleccion
@@ -327,15 +367,27 @@ class Vendedor(QMainWindow):
 
     def transaccion(self,str_producto):
         self.dialogTransaccion.show()
+def sendMessage(msg_txt_formatted):
+    try:
+        client = iothub_client_init()
+        message = Message(msg_txt_formatted)
+        client.send_message(message)
+        client.disconnect()
 
+    except KeyboardInterrupt:
+        print ( "IoTHubClient sample stopped" )
+def iothub_client_init():
+        # Create an IoT Hub client
+    client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
+    return client
 
 def main():
-    global int_Verify
     app = QApplication(sys.argv)
     ex = Vendedor()
     sys.exit(app.exec_())
 
-
 if __name__ == '__main__':
-
+    print ( "IoT Hub Quickstart #1 - Simulated device" )
     main()
+
+    #iothub_client_telemetry_sample_run()

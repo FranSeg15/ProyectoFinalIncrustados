@@ -15,9 +15,10 @@ from azure.iot.device import IoTHubDeviceClient, Message
 CONNECTION_STRING = "HostName=Proyecto-IE-Incrustados.azure-devices.net;DeviceId=MyPythonDevice;SharedAccessKey=SYD4n2ovYxHGgexe18gCE+wdfSN4SjMwzg/zDdAUmOw="
 
 # Define the JSON message to send to IoT Hub.
+oldTime =time.time()
 TEMPERATURE = 20.0
 HUMIDITY = 60
-MSG_TXT = '{{"temperature": {temperature},"humidity": {humidity}}}'
+MSG_TXT = '{{"Message Type": {msg_type},"Content": {data_str}}}'
 
 def iothub_client_init():
     # Create an IoT Hub client
@@ -25,7 +26,7 @@ def iothub_client_init():
     return client
 
 def iothub_client_telemetry_sample_run():
-
+    global oldTime
     try:
         client = iothub_client_init()
         print ( "IoT Hub device sending periodic messages, press Ctrl-C to exit" )
@@ -34,7 +35,7 @@ def iothub_client_telemetry_sample_run():
             # Build the message with simulated telemetry values.
             temperature = TEMPERATURE + (random.random() * 15)
             humidity = HUMIDITY + (random.random() * 20)
-            msg_txt_formatted = MSG_TXT.format(temperature=temperature, humidity=humidity)
+            msg_txt_formatted = MSG_TXT.format(msg_type=temperature, data_str=humidity)
             message = Message(msg_txt_formatted)
 
             # Add a custom application property to the message.
@@ -45,9 +46,14 @@ def iothub_client_telemetry_sample_run():
               message.custom_properties["temperatureAlert"] = "false"
 
             # Send the message.
-            print( "Sending message: {}".format(message) )
-            client.send_message(message)
-            print ( "Message successfully sent" )
+            currentTime =time.time()
+
+            if int(currentTime-oldTime)>59:
+                oldTime= time.time()
+                print( "Sending message: {}".format(message) )
+                client.send_message(message)
+                print ( "Message successfully sent" )
+
             time.sleep(1)
 
     except KeyboardInterrupt:
