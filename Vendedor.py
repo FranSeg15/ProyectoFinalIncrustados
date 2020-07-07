@@ -126,17 +126,17 @@ class TransaccionW(QMainWindow):
         self.QWidget.layout.addWidget(self.QWidget.labelName)
         self.QWidget.layout.addWidget(self.QWidget.labelMonto)
         self.QWidget.setLayout(self.QWidget.layout)
-        self.QWidget.button = QPushButton('Cancelar', self)
+        self.QWidget.cancelar = QPushButton('Cancelar', self)
         self.EfectivoWidget = QLineEdit()
         self.EfectivoWidget.setPlaceholderText('Ingrese el monto en efectivo')
         self.QWidget.layout.addWidget(self.EfectivoWidget)
         self.QWidget.setLayout(self.QWidget.layout)
-        self.QWidget.boton = QPushButton('Realizar pago', self)
-        self.QWidget.layout.addWidget(self.QWidget.boton)
-        self.QWidget.layout.addWidget(self.QWidget.button)
+        self.QWidget.confirmar = QPushButton('Realizar pago', self)
+        self.QWidget.layout.addWidget(self.QWidget.confirmar)
+        self.QWidget.layout.addWidget(self.QWidget.cancelar)
         self.QWidget.setLayout(self.QWidget.layout)
-        self.QWidget.button.clicked.connect(self.print_my_df)
-        self.QWidget.boton.clicked.connect(self.ApplyPayment)
+        self.QWidget.cancelar.clicked.connect(self.print_my_df)
+        self.QWidget.confirmar.clicked.connect(self.ApplyPayment)
         self.setGeometry(600, 600, 900, 700)
         self.setWindowTitle('Pago')
         self.setCentralWidget(self.QWidget)
@@ -279,12 +279,7 @@ class Vendedor(QMainWindow):
         grid = QGridLayout()
         opciones.setLayout(grid)
         #Aqui ocupo metodo para noombres
-        Botones = ['A1', 'A2', 'A3', 'A4',
-                 'A5', 'B1', 'B2', 'B3',
-                 'B4', 'B5', 'C1', 'C2',
-                 'C3', 'C4', 'C5','D1', 'D2', 'D3',
-                 'D4', 'D5', 'E1', 'E2',
-                 'E3', 'E4', 'E5']
+        
         names = ['A1', 'A2', 'A3', 'A4',
                   'A5', 'B1', 'B2', 'B3',
                   'B4', 'B5', 'C1', 'C2',
